@@ -10,6 +10,8 @@ from . import string_formatters as fmt
 
 # Set default figure background (area outside axes) color to white
 mpl.rcParams['figure.facecolor'] = 'white'
+# Use Latex for text rendering
+mpl.rc('text', usetex=True)
 # Create a logger for this module.
 log = logging.getLogger(__name__)
 
@@ -47,7 +49,6 @@ def plot_repertoire(repertoire, partitioned_repertoire=None, legend=False, label
     # Set x-axis (i.e. state) labels
     states = [holi_index2state(i, n_nodes) for i in range(n_states)]
     state_labels = [fmt.state(state, node_labels=node_labels, sep=sep) for state in states]
-    state_labels = [r'${}$'.format(state_label) for state_label in state_labels] # texify
     ax.set_xticks(bar_centers)
     ax.set_xticklabels(state_labels, rotation='-45')
 
@@ -56,7 +57,7 @@ def plot_repertoire(repertoire, partitioned_repertoire=None, legend=False, label
     def add_probability_labels(repertoire, bar_centers):
         # for each bin, plot the label above it
         for state_probability, bar_center in zip(repertoire.flatten(), bar_centers):
-            ax.annotate("{:.2f}".format(state_probability), # round label to 2 decimal places
+            ax.annotate('{:.2f}'.format(state_probability), # round label to 2 decimal places
                         xy=(bar_center, state_probability), # the point being labeled
                         xycoords=('data', 'axes fraction'), # metadata about what's being labeled
                         xytext=(0, font_size), # location of label relative to xy
@@ -78,8 +79,8 @@ def plot_repertoire(repertoire, partitioned_repertoire=None, legend=False, label
 
     # Label axes if requested
     if label_axes:
-        ax.set_xlabel(r'State')
-        ax.set_ylabel(r'$p($State$)$')
+        ax.set_xlabel(r"State")
+        ax.set_ylabel(r'p(State)')
 
 def plot_cause_repertoire(concept, show_partitioned=True, expand=True, title_fmt='M', title_size=12,
                           state_fmt='1,', ax=None, **kwargs):
@@ -154,7 +155,9 @@ def plot_concept(concept, fig=None, subplot_spec=None, **kwargs):
     fig.add_subplot(summary_ax)
     fig.add_subplot(cause_ax)
     fig.add_subplot(effect_ax)
-    summary_ax.text(.5, .5, fmt.concept_summary(concept), horizontalalignment='center', verticalalignment='center')
+    summary_ax.text(.5, .5, fmt.concept_summary(concept),
+                    horizontalalignment='center', verticalalignment='center',
+                    multialignment='center')
     summary_ax.axis('off')
     plot_cause_repertoire(concept, ax=cause_ax, **kwargs)
     plot_effect_repertoire(concept, ax=effect_ax, **kwargs)

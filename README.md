@@ -8,6 +8,15 @@ non-Python libraries, so pip won't install it on Linux. You must do this
 yourself: `sudo apt-get install python3-matplotlib`.
 
 Afterwards, you can: `pip3 install phiplot`.
+
+All text is rendered in latex, so you will also need a tex distribution, and it
+will need to have all the various packages used by matplotlib.
+On Ubuntu:
+```
+sudo apt-get install texlive-latex-extra
+sudo apt-get install texlive-fonts-recommended
+sudo apt-get install dvipng
+```
 ### OS X
 OS X pip can distribute the binaries matplotlib depends on just fine:
 ```

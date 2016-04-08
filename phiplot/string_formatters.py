@@ -10,7 +10,7 @@ def state(state, node_labels=False, sep=False):
         node_tokens = list()
         for node_label, node_state in zip(node_labels, state):
             if node_state:
-                node_tokens.append(r'\bf{{{}}}'.format(node_label))
+                node_tokens.append(r'\textbf{{{}}}'.format(node_label))
             else:
                 node_tokens.append(node_label)
 
@@ -103,22 +103,22 @@ def repertoire_title(concept, direction, fmt_spec):
     sep = True if ',' in fmt_spec else ''
     title_parts = list()
     if 'M' in fmt_spec:
-        title_parts.append('MICE: ' + mice(concept, direction, sep=sep))
+        title_parts.append("MICE: " + mice(concept, direction, sep=sep))
     if 'P' in fmt_spec:
         title_parts.append(smallphi(concept, direction))
     if 'C' in fmt_spec:
-        title_parts.append('Cut: ' + partition(concept, direction, sep=sep))
+        title_parts.append("Cut: " + partition(concept, direction, sep=sep))
 
     if title_parts:
-        return '\t\t'.join(title_parts)
+        return '\quad'.join(title_parts)
     elif direction == 'past':
-        return 'Cause repertoire'
+        return r"Cause repertoire"
     elif direction == 'future':
-        return 'Effect repertoire'
+        return r"Effect repertoire"
 
 def concept_summary(concept):
     node_labels = get_node_labels(concept)
     mech_labels = [node_labels[x] for x in concept.mechanism]
     mech_str = ','.join(mech_labels)
     phi_str = smallphi(concept, None)
-    return mech_str + '\n' + phi_str
+    return mech_str + r'\newline' + phi_str
