@@ -184,7 +184,7 @@ def plot_concept_list(constellation, fig=None, **kwargs):
 
     fig.tight_layout()
 
-def plot_constellation(constellation):
+def plot_3D_constellation(constellation):
     """Generate a 3D-plot of a constellation of concepts in cause-effect space.
 
     Cause-effect space is a high dimensional space, one for each possible past
@@ -262,4 +262,68 @@ def plot_constellation(constellation):
     ax.w_zaxis.line.set_color((1, 1, 1, 0))
     ax.tick_params(colors=(1, 1, 1, 0))
     # Show plot
+    plt.show()
+
+# adapted from http://stackoverflow.com/questions/24659005/
+class ConstellationRadar(object):
+
+    def __init__(self, fig, titles, ticks=[.25, .5, .75], rect=None):
+        if rect is None:
+            rect = [0.1, 0.1, 0.8, 0.8]
+
+        self.n = len(titles)
+        self.angles = np.arange(0, 360, 360.0/self.n)
+        self.axes = [fig.add_axes(rect, projection="polar", label="axes%d" % i)
+                         for i in range(self.n)]
+
+        self.ax = self.axes[0]
+        self.ax.set_thetagrids(self.angles, labels=titles)
+        self.ax.set_yticks(ticks)
+
+        for ax in self.axes[1:]:
+            ax.set_yticks([])
+            ax.patch.set_visible(False)
+            ax.grid("off")
+            ax.xaxis.set_visible(False)
+
+        for ax, angle, label in zip(self.axes, self.angles, labels):
+            ax.set_rgrids(ticks, angle=angle, labels=[])
+            ax.spines["polar"].set_visible(False)
+            ax.set_ylim(0, 1)
+
+        self.ax.set_rgrids(ticks, angle=self.angles[0], labels=ticks)
+
+    def plot(self, values, *args, **kw):
+        angle = np.deg2rad(np.r_[self.angles, self.angles[0]])
+        values = np.r_[values, values[0]]
+        self.ax.plot(angle, values, *args, **kw)
+
+def plot_radar_constellation(constellation, state_fmt='A'):
+    # Uses labels and no separation
+    sub = constellation[0].subsystem
+    n_nodes = sub.size
+    n_states = 2 ** n_nodes
+    n_concepts = len(constellation)
+
+    node_labels, sep = fmt.parse_spec(constellation[0], state_fmt)
+    states = [holi_index2state(i, n_nodes) for i in range(n_states)]
+    state_labels = [fmt.state(state, node_labels=node_labels, sep=sep) for state in states]
+    cause_labels = [r'${}^p$'.format(state_label) for state_label in state_labels]
+    effect_labels = [r'${}^f$'.format(state_label) for state_label in state_labels]
+    titles = cause_labels + effect_labels
+
+    fig = plt.figure()
+    radar = ConstellationRadar(fig, titles)
+
+    highest_phi = max([constellation[i].phi for i in range(n_concepts)]) # for normalization
+    for i in range(n_concepts):
+        cause_repertoire = constellation[i].expand_cause_repertoire().flatten()
+        effect_repertoire = constellation[i].expand_effect_repertoire().flatten()
+        full_rep = np.hstack([cause_repertoire, effect_repertoire])
+        mech_node_labels = [node_labels[x] for x in constellation[i].mechanism]
+        mech_label = ','.join(mech_node_labels)
+        relative_strength = constellation[i].phi / highest_phi
+        radar.plot(full_rep, "-", lw=relative_strength * 5, alpha=relative_strength * 0.5, label=mech_label)
+
+    radar.ax.legend(bbox_to_anchor=(1.25,1.05))
     plt.show()
