@@ -15,6 +15,7 @@ setup(
     url='http://github.com/grahamfindlay/phiplot',
     license='GNU General Public License v3.0',
     packages=['phiplot'],
+    install_requires=['numpy', 'pyphi'],
     classifiers=[
       'Development Status :: 3 - Alpha',
       'Intended Audience :: Developers',

@@ -5,5 +5,8 @@
 # Install from local git repo, then setup.py
 -e .
 
+# Test requirements
+pytest
+
 # Matplotlib is required, but is not pip-installable because it depends on
-#   non-Python libraries. Therefore it is not listed here.  
+#   non-Python libraries. Therefore it is not listed here.
