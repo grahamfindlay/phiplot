@@ -15,8 +15,9 @@ mpl.rc('text', usetex=True)
 # Create a logger for this module.
 log = logging.getLogger(__name__)
 
-def plot_repertoire(repertoire, partitioned_repertoire=None, legend=False, label_with_values=False,
-                    label_axes=False, node_labels=False, sep=True, ax=None):
+def plot_repertoire(repertoire, partitioned_repertoire=None, legend=False,
+                    label_with_values=False, label_axes=False, node_labels=False,
+                    sep=True, ax=None):
     """Plot a cause or effect repertoire as a probability vs. state barchart.
 
     Examples:
@@ -56,11 +57,15 @@ def plot_repertoire(repertoire, partitioned_repertoire=None, legend=False, label
 
     # Plot
     bar_width = .35 if partitioned_repertoire is not None else 0.7
-    unpartitioned_bars = ax.bar(state_inds, repertoire.flatten(), width=bar_width, color='black')
+    unpartitioned_bars = ax.bar(state_inds, repertoire.flatten(),
+                                width=bar_width, color='black')
     if partitioned_repertoire is not None:
-        partitioned_bars = ax.bar(state_inds + bar_width, partitioned_repertoire.flatten(), width=bar_width, color='gray')
+        partitioned_bars = ax.bar(state_inds + bar_width,
+                                  partitioned_repertoire.flatten(),
+                                  width=bar_width, color='gray')
         if legend:
-            ax.legend((unpartitioned_bars[0], partitioned_bars[0]), ('unpartitioned', 'partitioned'))
+            ax.legend((unpartitioned_bars[0], partitioned_bars[0]),
+                      ('unpartitioned', 'partitioned'))
         bar_centers = state_inds + bar_width
     else:
         bar_centers = state_inds + bar_width / 2
@@ -81,6 +86,9 @@ def plot_repertoire(repertoire, partitioned_repertoire=None, legend=False, label
     # Plot state probabilities above each bar if requested
     font_size = 8 # size of labels, in pts.
     def add_probability_labels(repertoire, bar_centers):
+        """ Given an array of state probabiltities and the x coordinate of each
+            state's bar, plot numeric labels above each bar."""
+
         # for each bin, plot the label above it
         for state_probability, bar_center in zip(repertoire.flatten(), bar_centers):
             ax.annotate('{:.2f}'.format(state_probability), # round label to 2 decimal places
