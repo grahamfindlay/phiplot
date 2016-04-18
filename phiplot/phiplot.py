@@ -298,6 +298,11 @@ def plot_concept_list(constellation, fig=None, **kwargs):
 def plot_3D_constellation(constellation):
     """Generate a 3D-plot of a constellation of concepts in cause-effect space.
 
+    Examples:
+        >>> big_mip = pyphi.compute.big_mip(sub)
+        >>> plot_3D_constellation(big_mip.unpartitioned_constellation)
+
+    Written by Billy Marshall.
     Cause-effect space is a high dimensional space, one for each possible past
     and future state of the system (2 ** (n+1) dimensional for a system of
     binary elements). Each concept in the constellation is a point in
@@ -306,7 +311,13 @@ def plot_3D_constellation(constellation):
     of the corresponding past / future state in the cause-effect repertoires of
     the concept. Only three dimensions are shown in the plot, the two future
     states and one past state with greatest variance in the repertoire values.
+
+    Args:
+        constellation (list(pyphi.models.Concept)): A list of concepts to plot.
     """
+    # TODO : Add control over state labels
+    # TODO : Add axis legend to indicate which are past and which are future
+    # TODO : Label stars with their mechanisms
     if not constellation:
         return
     # TODO validate constellation
@@ -377,7 +388,23 @@ def plot_3D_constellation(constellation):
 
 # adapted from http://stackoverflow.com/questions/24659005/
 class ConstellationRadar(object):
+    """A radarchart used to plot constellations.
 
+    Examples:
+        >>> fig = matplotlib.pyplot.figure()
+        >>> titles = ['00p', '01p', '10p', '11p', '00f', '01f', '10f', '11f']
+        >>> radar = ConstellationRadar(fig, titles)
+
+    Args:
+        fig (matplotlib.Figure): The figure on which to plot.
+        titles (list(str)): The state labels used to title each spoke.
+
+    Keyword args:
+        ticks (list(float)): The probability values to grid on the plot. 0 and 1
+            are done automatically. Default [0.25, 0.5, 0.75]
+        rect (list(int)): A rectangle specifying where on the figure to plot.
+            Format is [left_border, bottom_border, width, height].
+    """
     def __init__(self, fig, titles, ticks=[.25, .5, .75], rect=None):
         if rect is None:
             rect = [0.1, 0.1, 0.8, 0.8]
@@ -405,11 +432,40 @@ class ConstellationRadar(object):
         self.ax.set_rgrids(ticks, angle=self.angles[0], labels=ticks)
 
     def plot(self, values, *args, **kw):
+        """Plot a concept's cause-effect repertoire on the radarchart.
+
+        Examples:
+            >>> full_rep = np.hstack([cause_rep, effect_rep])
+            >>> radar.plot(full_rep, '-', lw=2, label=mechanism_label)
+
+        Args:
+            values (np.ndarray): A flat array of state probabilitites, given in
+                the same order as the `titles` argument to the ConstellationRadar
+                constructor.
+
+        Also takes standard matplotlib linespec arguments, such as color, style,
+            linewidth, etc.
+        """
         angle = np.deg2rad(np.r_[self.angles, self.angles[0]])
         values = np.r_[values, values[0]]
         self.ax.plot(angle, values, *args, **kw)
 
 def plot_radar_constellation(constellation, state_fmt='A'):
+    """Plot a constellation using a radarchart.
+
+    Examples:
+        >>> big_mip = pyphi.compute.big_mip(sub)
+        >>> plot_radar_constellation(big_mip)
+
+    Args:
+        constellation (list(pyphi.models.Concept)): A list of concepts to plot.
+
+    Keyword args:
+        state_fmt (str): Specifies how the states will be printed. If the string
+            begins with a 1, the binary reperestation will be used. If the string
+            beings with an alphabetic character, node labels will be used. If a
+            ',' is present, element names will be separated when printing.
+    """
     # Uses labels and no separation
     sub = constellation[0].subsystem
     n_nodes = sub.size
@@ -434,7 +490,8 @@ def plot_radar_constellation(constellation, state_fmt='A'):
         mech_node_labels = [node_labels[x] for x in constellation[i].mechanism]
         mech_label = ','.join(mech_node_labels)
         relative_strength = constellation[i].phi / highest_phi
-        radar.plot(full_rep, "-", lw=relative_strength * 5, alpha=relative_strength * 0.5, label=mech_label)
+        radar.plot(full_rep, "-", lw=relative_strength * 5,
+                   alpha=relative_strength * 0.5, label=mech_label)
 
     radar.ax.legend(bbox_to_anchor=(1.25,1.05))
     plt.show()
