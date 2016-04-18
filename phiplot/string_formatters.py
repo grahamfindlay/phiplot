@@ -1,4 +1,19 @@
 def state(state, node_labels=False, sep=False):
+    """Format a state tuple for printing. Uses LaTeX.
+
+    Args:
+        state (tuple(bit)): The state to format.
+
+    Keyword args:
+        node_labels (list(str)): The labels of each node in the system, as ordered
+            in `state`. Nodes that are on will be bolded. If none is provided,
+            simply print the state bits.
+        sep (str): Use this character to separate node names
+
+    Returns:
+        (str): The formatted state.
+    """
+
     state_string = r''
 
     if node_labels is False:
@@ -18,6 +33,19 @@ def state(state, node_labels=False, sep=False):
     return r'{}'.format(sep_str).join(node_tokens)
 
 def parse_spec(concept, fmt_spec):
+    """ Parse a string that specifies how to format a state.
+
+    Args:
+        concept (pyphi.models.Concept): The concept whose subsystem we're
+            interested in formatting the state of. Used to fetc node labels.
+        fmt_spec (str): The actual state format specifier. If the string
+            begins with a 1, the binary reperestation will be used. If the string
+            beings with an alphabetic character, node labels will be used. If a
+            ',' is present, element names will be separated when printing.
+
+    Returns:
+        (list(str), str): The node labels and separator specified by the spec.
+    """
     if fmt_spec[0].isalpha():
         # if printing node labels
         node_labels = get_node_labels(concept)
@@ -25,16 +53,37 @@ def parse_spec(concept, fmt_spec):
         # if printing state bits
         node_labels = False
     else:
-        raise ValueError('Unrecognized format spec. First character must be a letter or a digit.')
+        raise ValueError('Unrecognized format spec. '
+                         'First character must be a letter or a digit.')
 
     sep = True if ',' in fmt_spec else False #
 
     return (node_labels, sep)
 
 def get_node_labels(concept):
+    """Get the node labels for each node in a concept's subsystem.
+
+    Args:
+        concept (pyphi.models.Concept)
+
+    Returns:
+        (list(str)): The node labels.
+    """
     return [node.label for node in concept.subsystem.nodes]
 
 def mice(concept, direction, sep=False):
+    """Format a MICE for printing. Uses LaTeX.
+
+    Args:
+        concept (pyphi.models.Concept): The concept whose MICE to print.
+        direction (str): 'past' or 'future'.
+
+    Keyword args:
+        sep (str): Use this separator string between element names.
+
+    Returns:
+        (str): The formatted MICE.
+    """
     if direction == 'past':
         purview = concept.cause.purview
     elif direction == 'future':
@@ -52,6 +101,21 @@ def mice(concept, direction, sep=False):
     return r'${}^c/{}^{}$'.format(mech_str, purv_str, direction[0])
 
 def partition(concept, direction, sep=False, oneliner=True):
+    """Format a partition/cut for printing. Uses LaTeX.
+
+    Args:
+        concept (pyphi.models.Concept): The concept whose MICE partition to print.
+        direction (str): 'past' or 'future'.
+
+    Keyword args:
+        sep (str): Use this separator string between element names.
+        oneliner (bool): If true, print partition on a single line using a
+            vertical (i.e. /) symbol, rather than a horizontal bar as in pyphi.
+            Default *True*.
+
+    Returns:
+        (str): The formatted partition.
+    """
     if direction == 'past':
         partition = concept.cause.mip.partition
     elif direction == 'future':
@@ -86,6 +150,16 @@ def partition(concept, direction, sep=False, oneliner=True):
                     dir=direction[0])
 
 def smallphi(concept, direction):
+    """Format a smallphi value for printing. Uses LaTeX.
+
+    Args:
+        concept (pyphi.models.Concept): The concept whose smallphi to print.
+        direction (str): 'past', 'future', or *None* determine whether to print
+            smallphi_cause, smallphi_effect, or smallphi.
+
+    Returns:
+        (str): The formatted smallphi.
+    """
     if direction == 'past':
         phi = concept.cause.phi
         dir_str = 'cause'
@@ -100,6 +174,21 @@ def smallphi(concept, direction):
                 dir_str=dir_str, phi=phi)
 
 def repertoire_title(concept, direction, fmt_spec):
+    """Format a repertoire's tile/metainfo for printing. Uses LaTeX.
+
+    Args:
+        concept (pyphi.models.Concept): The concept in question.
+        direction (str): 'past' or 'future'.
+        fmt_spec (str): Specifies how the plot should be titled. If the string
+            contains an...
+                'M', the MICE will be plotted.
+                'P', the smallphi_cause will be plotted.
+                'C', the partition/cut will be plotted.
+                ',', element names will be separated when printing.
+
+    Returns:
+        (str): The formatted title/metainfo.
+    """
     sep = True if ',' in fmt_spec else ''
     title_parts = list()
     if 'M' in fmt_spec:
@@ -117,6 +206,14 @@ def repertoire_title(concept, direction, fmt_spec):
         return r"Effect repertoire"
 
 def concept_summary(concept):
+    """Format a concept's title/metainfo for printing. Uses LaTeX.
+
+    Args:
+        concept (pyphi.models.Concept): The concept in question.
+
+    Returns:
+        (str): The formatted title/metainfo.
+    """
     node_labels = get_node_labels(concept)
     mech_labels = [node_labels[x] for x in concept.mechanism]
     mech_str = ','.join(mech_labels)
