@@ -261,10 +261,25 @@ def plot_concept(concept, fig=None, subplot_spec=None, **kwargs):
 
     fig.tight_layout()
 
-# try gridspec style
 def plot_concept_list(constellation, fig=None, **kwargs):
-    DEFAULT_WIDTH = 8
-    DEFAULT_CONCEPT_HEIGHT = 1.75
+    """Vertically stack a constellation's concept plots (uses `plot_concept`).
+
+    Examples:
+        >>> big_mip = pyphi.compute.big_mip(sub)
+        >>> plot_concept_list(big_mip.unpartitioned_constellation,
+                             title_fmt='MP', state_fmt='1')
+        >>> matplotlib.pyplot.show()
+
+    Args:
+        constellation (list(pyphi.models.Concept)): A list of concepts to plot.
+
+    Keyword args:
+        fig (matplotlib.Figure): A figure on which to plot. If *None*, a new
+            figure is created and used. Default *None*.
+        Any unmatched kwargs are passed to `plot_concept`.
+    """
+    DEFAULT_WIDTH = 8 # in inches
+    DEFAULT_CONCEPT_HEIGHT = 1.75 # in inches
     n_concepts = len(constellation)
     if fig is None:
         fig = plt.figure(1, (DEFAULT_WIDTH, DEFAULT_CONCEPT_HEIGHT * n_concepts))
