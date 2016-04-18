@@ -180,8 +180,12 @@ def plot_cause_repertoire(concept, show_partitioned=True, expand=True,
         ax.set_title(fmt.repertoire_title(concept, 'past', title_fmt),
                      fontsize=title_size)
 
-def plot_effect_repertoire(concept, show_partitioned=True, expand=True, title_fmt='M', title_size=12,
-                           state_fmt='1,', ax=None, **kwargs):
+def plot_effect_repertoire(concept, show_partitioned=True, expand=True,
+                           title_fmt='M', title_size=12, state_fmt='1,',
+                           ax=None, **kwargs):
+    """Plot an effect-repertoire barchart. See `plot_cause_repertoire` for
+        details.
+    """
 
     if ax is None:
         ax = plt.gca()
