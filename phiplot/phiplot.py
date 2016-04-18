@@ -212,20 +212,42 @@ def plot_effect_repertoire(concept, show_partitioned=True, expand=True,
     if title_fmt is not None:
         ax.set_title(fmt.repertoire_title(concept, 'future', title_fmt), fontsize=title_size)
 
-# Try gridspec style
 def plot_concept(concept, fig=None, subplot_spec=None, **kwargs):
+    """Plot a concept's cause- and effect-repertoires side-by-side, with some
+    additional metainfo.
+
+    Examples:
+        >>> # Create an 8-inch by 2-inch figure and plot on it.
+        >>> A = pyphi.compute.concept(sub, ('A',))
+        >>> fig = matplotlib.pyplot.figure(1, (8, 2))
+        >>> plot_concept(A, fig=fig, state_fmt='ABC') # use node labels
+        >>> matplotlib.pyplot.show()
+
+    Args:
+        concept (pyphi.models.Concept): The concept to plot.
+
+    Keyword args:
+        fig (matplotlib.Figure): A figure on which to plot. If none is provided,
+            a new figure is created and used. Default *None*.
+        subplot_spec (matplotlib.gridspec.GridSpec): A gridspec object indicating
+            where on a figure to plot. If none is provided, the whole figure is
+            used. Default *None*.
+        Any unmatched kwargs are passed to `plot_cause_repertoire` and
+            `plot_effect_repertoire`.
+    """
 
     if fig is None:
         fig = plt.figure()
 
     if subplot_spec is None and fig is not None:
+        # Divide the plotting area into a 1-row by 9-column grid.
         gs = gridspec.GridSpec(1, 9)
     else:
         gs = gridspec.GridSpecFromSubplotSpec(1, 9, subplot_spec=subplot_spec)
 
-    summary_ax = plt.Subplot(fig, gs[0, 4])
-    cause_ax = plt.Subplot(fig, gs[0, 0:4])
-    effect_ax = plt.Subplot(fig, gs[0, 5:9])
+    summary_ax = plt.Subplot(fig, gs[0, 4]) # Use the middle column for metainfo
+    cause_ax = plt.Subplot(fig, gs[0, 0:4]) # Span the leftmost 4 columns
+    effect_ax = plt.Subplot(fig, gs[0, 5:9]) # Span the rightmost 4 columns
     fig.add_subplot(summary_ax)
     fig.add_subplot(cause_ax)
     fig.add_subplot(effect_ax)
