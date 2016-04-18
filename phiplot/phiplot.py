@@ -17,6 +17,32 @@ log = logging.getLogger(__name__)
 
 def plot_repertoire(repertoire, partitioned_repertoire=None, legend=False, label_with_values=False,
                     label_axes=False, node_labels=False, sep=True, ax=None):
+    """Plot a cause or effect repertoire as a probability vs. state barchart.
+
+    Examples:
+        >>> A = pyphi.compute.concept(sub, ('A',))
+        >>> plot_repertoire(A.cause.repertoire)
+        >>> matplotlib.pyplot.show()
+
+    Args:
+        repertoire (np.ndarray): An array that, when flattened, gives the
+            probability of each state in loli order. Any PyPhi repertoire satisfies
+            these conditions.
+
+    Keyword Args:
+        partitioned_repertoire (np.ndarray): The partitioned analogue of 'repertoire',
+            which is assumed to be unpartitioned whenever this kwarg is provided.
+        legend (bool): Plot a legend. Default *false*.
+        label_with_values (bool): Plot numeric probabilitites above each bar.
+            Default *false*.
+        label_axes (bool): Label the x and y axes. Default *false*.
+        node_labels (list(str)): If provided, node labels will be used instead
+            of bits when printing states (e.g. ABC rather than 111).
+        sep (str): If provided, use this string to separate elements when printing
+            states (e.g. 1,1,1 if sep=',').
+        ax (matplotlib.Axes): The axis on which to plot. If none is provided,
+            the current axes are used.
+    """
     # TODO: expose state probability label text properties
 
     if ax is None:
