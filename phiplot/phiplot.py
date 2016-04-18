@@ -32,16 +32,17 @@ def plot_repertoire(repertoire, partitioned_repertoire=None, legend=False,
 
     Keyword Args:
         partitioned_repertoire (np.ndarray): The partitioned analogue of 'repertoire',
-            which is assumed to be unpartitioned whenever this kwarg is provided.
-        legend (bool): Plot a legend. Default *false*.
+            which is assumed to be unpartitioned. Both repertoires are plotted
+            side-by-side.
+        legend (bool): Plot a legend. Default *False*.
         label_with_values (bool): Plot numeric probabilitites above each bar.
-            Default *false*.
-        label_axes (bool): Label the x and y axes. Default *false*.
+            Default *False*.
+        label_axes (bool): Label the x and y axes. Default *False*.
         node_labels (list(str)): If provided, node labels will be used instead
             of bits when printing states (e.g. ABC rather than 111).
         sep (str): If provided, use this string to separate elements when printing
             states (e.g. 1,1,1 if sep=',').
-        ax (matplotlib.Axes): The axis on which to plot. If none is provided,
+        ax (matplotlib.Axes): The axes on which to plot. If none are provided,
             the current axes are used.
     """
     # TODO: expose state probability label text properties
@@ -116,8 +117,41 @@ def plot_repertoire(repertoire, partitioned_repertoire=None, legend=False,
         ax.set_xlabel(r"State")
         ax.set_ylabel(r'p(State)')
 
-def plot_cause_repertoire(concept, show_partitioned=True, expand=True, title_fmt='M', title_size=12,
-                          state_fmt='1,', ax=None, **kwargs):
+def plot_cause_repertoire(concept, show_partitioned=True, expand=True,
+                          title_fmt='M', title_size=12, state_fmt='1,', ax=None,
+                          **kwargs):
+    """Plot a cause-repertoire barchart.
+
+    Examples:
+        >>> A = pyphi.compute.concept(sub, ('A',))
+        >>> # Title plot with MICE, phi, and cut info. Shrink title to fit.
+        >>> plot_cause_repertoire(A, title_fmt='MPC,', title_size=8)
+        >>> plt.show()
+
+    Args:
+        concept (pyphi.models.Concept): The concept whose cause to plot.
+
+    Keyword args:
+        show_partitioned (bool): Plot the partitioned repertoire alongside the
+            unpartitioend repertoire. Default *True*.
+        expand (bool): Expand and plot the repertoires over all subsystem elements,
+            rather than just over their purviews. Default *True*.
+        title_fmt (str): Specifies how the plot should be titled. If the string
+            contains an...
+                'M', the MICE will be plotted.
+                'P', the smallphi_cause will be plotted.
+                'C', the partition/cut will be plotted.
+                ',', element names will be separated when printing.
+            Default *M* (print only MICE with no element separation).
+        title_size (int): Font size of title. Default *12*.
+        state_fmt (str): Specifies how the states will be printed. If the string
+            begins with a 1, the binary reperestation will be used. If the string
+            beings with an alphabetic character, node labels will be used. If a
+            ',' is present, element names will be separated when printing.
+        ax (matplotlib.Axes): The axes on which to plot. If none are provided,
+            the current axes are used.
+        Any unmatched kwargs are relayed to `plot_repertoire`.
+    """
 
     if ax is None:
         ax = plt.gca()
@@ -138,11 +172,13 @@ def plot_cause_repertoire(concept, show_partitioned=True, expand=True, title_fmt
         partitioned_repertoire = None
 
     node_labels, state_sep = fmt.parse_spec(concept, state_fmt)
-    plot_repertoire(unpartitioned_repertoire, partitioned_repertoire=partitioned_repertoire,
+    plot_repertoire(unpartitioned_repertoire,
+                    partitioned_repertoire=partitioned_repertoire,
                     node_labels=node_labels, sep=state_sep, ax=ax, **kwargs)
 
     if title_fmt is not None:
-        ax.set_title(fmt.repertoire_title(concept, 'past', title_fmt), fontsize=title_size)
+        ax.set_title(fmt.repertoire_title(concept, 'past', title_fmt),
+                     fontsize=title_size)
 
 def plot_effect_repertoire(concept, show_partitioned=True, expand=True, title_fmt='M', title_size=12,
                            state_fmt='1,', ax=None, **kwargs):
