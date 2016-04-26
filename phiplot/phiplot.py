@@ -1,7 +1,7 @@
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D, proj3d
 import pyphi
 from pyphi.convert import holi_index2state, loli_index2state
 import numpy as np
@@ -295,14 +295,15 @@ def plot_concept_list(constellation, fig=None, **kwargs):
 
     fig.tight_layout()
 
-def plot_3D_constellation(constellation):
+def plot_3D_constellation(constellation, label_axes=False, label_stars=True,
+                          color_code_axes=False, state_fmt='A'):
     """Generate a 3D-plot of a constellation of concepts in cause-effect space.
 
     Examples:
         >>> big_mip = pyphi.compute.big_mip(sub)
         >>> plot_3D_constellation(big_mip.unpartitioned_constellation)
 
-    Written by Billy Marshall.
+    Written by Billy Marshall, modified by Graham Findlay.
     Cause-effect space is a high dimensional space, one for each possible past
     and future state of the system (2 ** (n+1) dimensional for a system of
     binary elements). Each concept in the constellation is a point in
@@ -315,56 +316,80 @@ def plot_3D_constellation(constellation):
     Args:
         constellation (list(pyphi.models.Concept)): A list of concepts to plot.
     """
-    # TODO : Add control over state labels
-    # TODO : Add axis legend to indicate which are past and which are future
-    # TODO : Label stars with their mechanisms
     if not constellation:
         return
-    # TODO validate constellation
-    n_elements = len(constellation[0].subsystem)
-    n_states = 2 ** n_elements
+
+    sub = constellation[0].subsystem
+    n_nodes = sub.size
+    n_states = 2 ** n_nodes
     n_concepts = len(constellation)
+    node_labels, sep = fmt.parse_spec(constellation[0], state_fmt)
+
     # Get an array of cause-effect repertoires, expanded over the system
     cause_repertoires = np.zeros((n_concepts, n_states))
     effect_repertoires = np.zeros((n_concepts, n_states))
     for i, concept in enumerate(constellation):
-        cause_repertoires[i] = concept.expand_cause_repertoire().flatten(order='F')
-        effect_repertoires[i] = concept.expand_effect_repertoire().flatten(order='F')
+        cause_repertoires[i] = concept.expand_cause_repertoire().flatten('F')
+        effect_repertoires[i] = concept.expand_effect_repertoire().flatten('F')
+
     # Find the one cause state and two effect states with greatest variance
     cause_variance = np.var(cause_repertoires, 0)
     effect_variance = np.var(effect_repertoires, 0)
     cause_arg = cause_variance.argsort()[-1:]
     effect_arg = effect_variance.argsort()[-2:]
-    states = ['' for i in range(3)]
-    states[0] = ''.join([str(c) for c in loli_index2state(effect_arg[0], n_elements)])
-    states[1] = ''.join([str(c) for c in loli_index2state(effect_arg[1], n_elements)])
-    states[2] = ''.join([str(c) for c in loli_index2state(cause_arg[0], n_elements)])
+
     # Set of points in cause-effect space and their size (phi)
     x = effect_repertoires[:, effect_arg[0]]
     y = effect_repertoires[:, effect_arg[1]]
     z = cause_repertoires[:, cause_arg[0]]
     size = [concept.phi for concept in constellation]
+
     # Initialize plot
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
+
     # Turn off grid background
     ax.axis('off')
+
     # Draw axes anchor at the origin
     ax1 = (0, 0)
     ax3 = (0, 1)
-    ax.plot(ax1, ax1, ax3, 'b', linewidth=2, zorder=0.3)
-    ax.plot(ax1, ax3, ax1, 'g', linewidth=2, zorder=0.3)
-    ax.plot(ax3, ax1, ax1, 'g', linewidth=2, zorder=0.3)
+
+    # Plan axis colors
+    if color_code_axes:
+        x_ax_color = y_ax_color = 'green'
+        z_ax_color = 'blue'
+    else:
+        x_ax_color = y_ax_color = z_ax_color = 'black'
+
+    # Draw axes
+    ax.plot(ax1, ax1, ax3, z_ax_color, linewidth=2, zorder=0.3)
+    ax.plot(ax1, ax3, ax1, y_ax_color, linewidth=2, zorder=0.3)
+    ax.plot(ax3, ax1, ax1, x_ax_color, linewidth=2, zorder=0.3)
+
     # Label axes with states
-    xs = (1, -0.1, -0.1)
-    ys = (-0.1, 1, -0.1)
-    zs = (-0.1, -0.1, 1)
-    dirs = ('x', 'y', 'z')
-    for S, D, X, Y, Z in zip(states, dirs, xs, ys, zs):
-        ax.text(X, Y, Z, S, D)
+    if label_axes:
+        xs = (1, -0.1, -0.1)
+        ys = (-0.1, 1, -0.1)
+        zs = (-0.1, -0.1, 1)
+        dirs = ('x', 'y', 'z')
+
+        x_ax_state = loli_index2state(effect_arg[0], n_nodes)
+        y_ax_state = loli_index2state(effect_arg[1], n_nodes)
+        z_ax_state = loli_index2state(cause_arg[0], n_nodes)
+
+        x_ax_label = r'${}^f$'.format(fmt.state(x_ax_state, node_labels=node_labels, sep=sep))
+        y_ax_label = r'${}^f$'.format(fmt.state(y_ax_state, node_labels=node_labels, sep=sep))
+        z_ax_label = r'${}^p$'.format(fmt.state(z_ax_state, node_labels=node_labels, sep=sep))
+
+        ax_labels = [x_ax_label, y_ax_label, z_ax_label]
+        for S, D, X, Y, Z in zip(ax_labels, dirs, xs, ys, zs):
+            ax.text(X, Y, Z, S, D)
+
     # Add appropriately sized concepts
     for i in range(n_concepts):
         ax.scatter(x[i], y[i], z[i], s=size[i]*1000, marker=u"*", c=u'yellow', zorder=0.1)
+
     # Set the ticks for the grid on the plot, no tick labels
     ax.set_xticks([0, 0.25, 0.5, 0.75, 1])
     ax.set_yticks([0, 0.25, 0.5, 0.75, 1])
@@ -372,17 +397,49 @@ def plot_3D_constellation(constellation):
     ax.set_xticklabels([])
     ax.set_yticklabels([])
     ax.set_zticklabels([])
+
     # Set the size of the space
     ax.set_zlim(0, 1)
     ax.set_ylim(0, 1)
     ax.set_xlim(0, 1)
+
     # Default view in elevation and azimuth angle
     ax.view_init(elev=25, azim=0)
+
     # Make actual axes and ticks invisible - using homemade axes
     ax.w_xaxis.line.set_color((1, 1, 1, 0))
     ax.w_yaxis.line.set_color((1, 1, 1, 0))
     ax.w_zaxis.line.set_color((1, 1, 1, 0))
     ax.tick_params(colors=(1, 1, 1, 0))
+
+    # Label stars with their mechanisms
+    if label_stars:
+        star_labels = [] # Holds matplotlib annotation objects
+        for i in range(n_concepts):
+            # Get 2d projection (think "screen coordinates") of the star, since
+            # there's no direct way in matplotlib to annotate a 3D point.
+            x2d, y2d, _ = proj3d.proj_transform(x[i], y[i], z[i], ax.get_proj())
+            # Get the mechanism's label
+            node_labels, _ = fmt.parse_spec(constellation[0], 'A,')
+            mech_node_labels = [node_labels[x] for x in constellation[i].mechanism]
+            mech_label = ','.join(mech_node_labels)
+            # plot and save the label
+            label = ax.annotate(mech_label, xy=(x2d, y2d), xytext=(10, 10),
+                                textcoords='offset points')
+            star_labels.append(label)
+
+        # This callback will update the label positions if the user changes
+        #   the plot's perspective interactively.
+        def update_star_labels(event):
+            for i in range(n_concepts):
+                x2d, y2d, _ = proj3d.proj_transform(x[i], y[i], z[i], ax.get_proj())
+                star_labels[i].xy = x2d, y2d
+                star_labels[i].update_positions(fig.canvas.renderer)
+            fig.canvas.draw()
+
+        # Register the callback
+        fig.canvas.mpl_connect('button_release_event', update_star_labels)
+
     # Show plot
     plt.show()
 
