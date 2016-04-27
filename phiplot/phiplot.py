@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 def plot_repertoire(repertoire, partitioned_repertoire=None, legend=False,
                     label_with_values=False, label_axes=False, node_labels=False,
-                    sep=True, ax=None):
+                    sep=True, show_states=True, ax=None):
     """Plot a cause or effect repertoire as a probability vs. state barchart.
 
     Examples:
@@ -42,6 +42,7 @@ def plot_repertoire(repertoire, partitioned_repertoire=None, legend=False,
             of bits when printing states (e.g. ABC rather than 111).
         sep (str): If provided, use this string to separate elements when printing
             states (e.g. 1,1,1 if sep=',').
+        show_states (bool): Plot states on the x axis.
         ax (matplotlib.Axes): The axes on which to plot. If none are provided,
             the current axes are used.
     """
@@ -82,7 +83,10 @@ def plot_repertoire(repertoire, partitioned_repertoire=None, legend=False,
     states = [holi_index2state(i, n_nodes) for i in range(n_states)]
     state_labels = [fmt.state(state, node_labels=node_labels, sep=sep) for state in states]
     ax.set_xticks(bar_centers)
-    ax.set_xticklabels(state_labels, rotation='-45')
+    if show_states:
+        ax.set_xticklabels(state_labels, rotation='-45')
+    else:
+        ax.set_xticklabels([])
 
     # Plot state probabilities above each bar if requested
     font_size = 8 # size of labels, in pts.
@@ -261,7 +265,7 @@ def plot_concept(concept, fig=None, subplot_spec=None, **kwargs):
 
     fig.tight_layout()
 
-def plot_concept_list(constellation, fig=None, **kwargs):
+def plot_concept_list(constellation, fig=None, show_states='all', **kwargs):
     """Vertically stack a constellation's concept plots (uses `plot_concept`).
 
     Examples:
@@ -274,6 +278,9 @@ def plot_concept_list(constellation, fig=None, **kwargs):
         constellation (list(pyphi.models.Concept)): A list of concepts to plot.
 
     Keyword args:
+        show_states (str): 'all' plots states below every concept's repertoires.
+            'none' never does. 'bottom' only plots states at the bottom of the
+            concept stack.
         fig (matplotlib.Figure): A figure on which to plot. If *None*, a new
             figure is created and used. Default *None*.
         Any unmatched kwargs are passed to `plot_concept`.
@@ -288,9 +295,15 @@ def plot_concept_list(constellation, fig=None, **kwargs):
     gs = gridspec.GridSpec(n_concepts, 1)
 
     for concept_idx in range(n_concepts):
+        if (show_states is 'all' or
+            show_states is 'bottom' and concept_idx == n_concepts - 1):
+            show_concept_states=True
+        else:
+            show_concept_states=False
         plot_concept(constellation[concept_idx],
                      fig=fig,
                      subplot_spec=gs[concept_idx, 0],
+                     show_states=show_concept_states,
                      **kwargs)
 
     fig.tight_layout()
